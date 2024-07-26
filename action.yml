@@ -1,0 +1,31 @@
+name: "QAWolf Greenlight"
+description: "Validates QAWolf test suites"
+inputs:
+  root_run_id:
+    description: "The root run ID"
+    required: true
+  api_key:
+    description: "The QAWolf API key"
+    required: true
+  timeout:
+    description: "The timeout for the test run in seconds (must be divisible by 15)"
+    required: false
+    default: "600"
+outputs:
+  success:
+    description: "The status of the test run"
+  blockingBugsCount:
+    description: "The number of blocking bugs"
+  nonBlockingBugsCount:
+    description: "The number of non-blocking bugs"
+  numWorkflowsRun:
+    description: "The number of workflows run"
+  bugs:
+    description: "The number of reproduced bugs in JSON format"
+runs:
+  using: "docker"
+  image: "Dockerfile"
+  args:
+    - ${{ inputs.runId }}
+    - ${{ inputs.apiKey }}
+    - ${{ inputs.timeout }}

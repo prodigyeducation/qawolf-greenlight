@@ -1,0 +1,45 @@
+name: "QAWolf Greenlight"
+on:
+  workflow_dispatch:
+    inputs:
+      root_run_id:
+        description: "The root run ID"
+        required: true
+      timeout:
+        description: "The timeout for the test run in seconds (must be divisible by 15)"
+        required: false
+        default: "600"
+jobs:
+  qawolf_test_run_success:
+    outputs:
+      success: ${{ steps.qawolf-greenlight.outputs.success }}
+      blockingBugsCount: ${{ steps.qawolf-greenlight.outputs.blockingBugsCount }}
+      nonBlockingBugsCount: ${{ steps.qawolf-greenlight.outputs.nonBlockingBugsCount }}
+      numWorkflowsRun: ${{ steps.qawolf-greenlight.outputs.numWorkflowsRun }}
+      bugs: ${{ steps.qawolf-greenlight.outputs.bugs }}
+    runs-on: [self-hosted, k8s-staging, default]
+    steps:
+      - uses: actions/checkout@v4
+      - id: qawolf-greenlight
+        uses: ./
+        with:
+          root_run_id: ${{ inputs.root_run_id }}
+          api_key: ${{ secrets.QAWOLF_API_KEY }}
+          timeout: ${{ inputs.timeout }}
+  blocked_workflow:
+    runs-on: [self-hosted, k8s-staging, default]
+    needs: qawolf_test_run_success
+    steps:
+      - run: echo "QAWolf test run successful"
+  qawolf_test_run_failure:
+    runs-on: [self-hosted, k8s-staging, default]
+    needs: qawolf_test_run_success
+    if: failure()
+    steps:
+      - run: |
+          echo "QAWolf test run failed"
+          echo "-  ${{ needs.qawolf_test_run_success.outputs.numWorkflowsRun }} workflows ran"
+          echo "-  ${{ needs.qawolf_test_run_success.outputs.blockingBugsCount }} blocking bugs"
+          echo "-  ${{ needs.qawolf_test_run_success.outputs.nonBlockingBugsCount }} non-blocking bugs"
+          echo "----"
+          echo "${{ toJson(needs.qawolf_test_run_success.outputs.bugs) }}"
