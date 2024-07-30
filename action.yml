@@ -1,0 +1,66 @@
+name: "QAWolf Greenlight"
+description: "Triggers a test suite run and waits for the results from QAWolf"
+inputs:
+  qawolf-api-key:
+    description: "API Key on QAWolf"
+    required: true
+  qawolf-notification-config:
+    description: "DeployConfig for QAWolf.attemptNotifyDeploy."
+    required: true
+    default: "{}"
+  timeout:
+    description: "Timeout in seconds"
+    default: 600
+  interval:
+    description: "Interval to check for status"
+    default: 30
+outputs:
+  status:
+    description: "The status of the test run. 'success' or 'failure' or 'timeout'"
+    value: ${{ steps.waitForResults.outputs.status }}
+  blockingBugsCount:
+    description: "The number of blocking bugs"
+    value: ${{ steps.waitForResults.outputs.blockingBugsCount }}
+  nonBlockingBugsCount:
+    description: "The number of non-blocking bugs"
+    value: ${{ steps.waitForResults.outputs.nonBlockingBugsCount }}
+  numWorkflowsRun:
+    description: "The number of workflows run"
+    value: ${{ steps.waitForResults.outputs.numWorkflowsRun }}
+  bugs:
+    description: "The number of reproduced bugs in JSON format"
+    value: ${{ steps.waitForResults.outputs.bugs }}
+runs:
+  using: "composite"
+  steps:
+    - name: Use Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+    - id: triggerRun
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: node ./scripts/notifyDeploy.js
+      env:
+        INPUT_API_KEY: ${{ inputs.qawolf-api-key }}
+        INPUT_CONFIG: ${{ inputs.qawolf-notification-config }}
+    - id: waitForResults
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: ./scripts/greenlight.sh
+      env:
+        INPUT_API_KEY: ${{ inputs.qawolf-api-key }}
+        INPUT_ROOT_RUN_ID: ${{ steps.triggerRun.outputs.runId }}
+        INPUT_TIMEOUT: ${{ inputs.timeout }}
+        INPUT_INTERVAL: ${{ inputs.interval }}
+    - uses: actions/github-script@v7
+      if: failure() && steps.waitForResults.outputs.status == 'timeout'
+      with:
+        script: |
+          core.error("QAWolf tests timed out");
+    - uses: actions/github-script@v7
+      if: failure() && steps.waitForResults.outputs.status == 'failure'
+      with:
+        script: |
+          core.error("There were ${{ steps.waitForResults.outputs.blockingBugsCount }} blocking bugs");
+          core.warning("There were ${{ steps.waitForResults.outputs.nonBlockingBugsCount }} non-blocking bugs");
