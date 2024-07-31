@@ -6,7 +6,7 @@ This GitHub Action integrates with QAWolf, an end-to-end testing platform, to va
 
 To use this GitHub Action, follow these steps:
 
-1. Clone the repository: `git clone https://github.com/SMARTeacher/qawolf-greenlight.git`
+1. Clone the repository: `git clone https://github.com/prodigyeducation/qawolf-greenlight.git`
 
 ## Usage
 
@@ -14,7 +14,7 @@ To use this action in your workflow, add the following step to your GitHub Actio
 
 ```yaml
 - name: QAWolf Greenlight
-  uses: SMARTeacher/qawolf-greenlight@v1
+  uses: prodigyeducation/qawolf-greenlight@v1
   with:
     qawolf-api-key: ${{ secrets.QAWOLF_API_KEY }}
     qawolf-notification-config: '{ "branch": "main", "deploymentType": "staging" }'
