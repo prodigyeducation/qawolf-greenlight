@@ -1,5 +1,8 @@
 name: "QAWolf Greenlight"
 description: "Triggers a test suite run and waits for the results from QAWolf"
+branding:
+  icon: 'bell'
+  color: 'blue'
 inputs:
   qawolf-api-key:
     description: "API Key on QAWolf"
