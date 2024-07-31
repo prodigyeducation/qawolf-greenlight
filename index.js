@@ -20,7 +20,7 @@ const { attemptNotifyDeploy, pollCiGreenlightStatus } = qaWolf.makeQaWolfSdk({
 
 async function notifyDeploy() {
   const result = await attemptNotifyDeploy(qaWolfConfig);
-  if (result.outcome != "success") {
+  if ((result.outcome = "success")) {
     core.setFailed("QAWolf CI Notify Deploy failed");
     process.exit(1);
   }
@@ -60,26 +60,25 @@ async function pollGreenlight(runId) {
 
       await core.summary
         .addHeading("QAWolf Greenlight :wolf:")
-        .addRaw(`#### Run ${runId}: FAILED :x: `)
-        .addEOL()
-        .addRaw(`- ${result.greenlightStatus.blockingBugsCount} Blocking Bugs`)
-        .addEOL()
-        .addRaw(
-          result.greenlightStatus.blockingBugUrls
-            .map((item) => `-- [${item}](${item})`)
-            .join("<br>")
+        .addHeading(`Run ${runId}: FAILED :x: `, 3)
+        .addHeading(
+          `${result.greenlightStatus.blockingBugsCount} Blocking Bugs`,
+          4
         )
-        .addEOL()
-        .addRaw(
-          `- ${result.greenlightStatus.nonBlockingBugsCount} Non-blocking Bugs `
+        .addList(
+          result.greenlightStatus.blockingBugUrls.map(
+            (item) => `[${item}](${item})`
+          )
         )
-        .addEOL()
+        .addHeading(
+          `${result.greenlightStatus.nonBlockingBugsCount} Non-blocking Bugs`,
+          4
+        )
         .addBreak()
         .addCodeBlock(
           JSON.stringify(result.greenlightStatus.reproducedBugs, null, 2),
           "json"
         )
-        .addEOL()
         .write();
 
       core.setFailed("QAWolf CI Greenlight failed");
@@ -90,8 +89,7 @@ async function pollGreenlight(runId) {
       core.setOutput("nonBlockingBugsCount", 0);
       await core.summary
         .addHeading("QAWolf Greenlight :wolf:")
-        .addRaw(`#### Run ${runId}: SUCCESS :white_check_mark: `)
-        .addEOL()
+        .addHeading(`Run ${runId}: SUCCESS :white_check_mark:`, 3)
         .write();
       core.info("QAWolf CI Greenlight succeeded");
       process.exit(0);
@@ -101,8 +99,7 @@ async function pollGreenlight(runId) {
         core.setOutput("status", "timeout");
         await core.summary
           .addHeading("QAWolf Greenlight :wolf:")
-          .addRaw(`#### Run ${runId}: TIMEOUT :x: `)
-          .addEOL()
+          .addHeading(`Run ${runId}: TIMEOUT :x:`, 3)
           .write();
 
         core.setFailed("QAWolf CI Greenlight timeout");
@@ -110,8 +107,7 @@ async function pollGreenlight(runId) {
         core.setOutput("status", "cancelled");
         await core.summary
           .addHeading("QAWolf Greenlight :wolf:")
-          .addRaw(`#### Run ${runId}: CANCELLED :heavy_multiplication_x: `)
-          .addEOL()
+          .addHeading(`Run ${runId}: CANCELLED :heavy_multiplication_x: `, 3)
           .write();
 
         core.setFailed("QAWolf CI Greenlight cancelled");
